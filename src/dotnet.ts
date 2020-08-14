@@ -8,17 +8,26 @@ import { getPullRequestFiles } from "./files";
 import type { ExecOptions } from "@actions/exec/lib/interfaces";
 
 export interface FormatOptions {
-  dryRun: boolean;
   onlyChangedFiles: boolean;
+  check: boolean;
+  workspace?: string;
+  folder?: string;
+  include?: string;
+  exclude?: string;
 }
 
 function formatOnlyChangedFiles(onlyChangedFiles: boolean): boolean {
   if (onlyChangedFiles) {
-    if (context.eventName === "issue_comment" || context.eventName === "pull_request") {
+    if (
+      context.eventName === "issue_comment" ||
+      context.eventName === "pull_request"
+    ) {
       return true;
     }
 
-    warning("Formatting only changed files is available on the issue_comment and pull_request events only");
+    warning(
+      "Formatting only changed files is available on the issue_comment and pull_request events only"
+    );
 
     return false;
   }
@@ -31,10 +40,10 @@ export async function format(options: FormatOptions): Promise<boolean> {
     ignoreReturnCode: true,
   };
 
-  const dotnetFormatOptions = ["format", "--check"];
+  const dotnetFormatOptions = ["format"];
 
-  if (options.dryRun) {
-    dotnetFormatOptions.push("--dry-run");
+  if (options.check) {
+    dotnetFormatOptions.push("--check");
   }
 
   if (formatOnlyChangedFiles(options.onlyChangedFiles)) {
@@ -51,8 +60,25 @@ export async function format(options: FormatOptions): Promise<boolean> {
     dotnetFormatOptions.push("--files", filesToCheck.join(","));
   }
 
+  if (options.folder) {
+    dotnetFormatOptions.push(options.folder, "--folder");
+  } else if (options.workspace) {
+    dotnetFormatOptions.push(options.workspace);
+  }
+
+  if (options.include) {
+    dotnetFormatOptions.push("--include", options.include);
+  }
+  if (options.exclude) {
+    dotnetFormatOptions.push("--exclude", options.exclude);
+  }
+
   const dotnetPath: string = await which("dotnet", true);
-  const dotnetResult = await exec(`"${dotnetPath}"`, dotnetFormatOptions, execOptions);
+  const dotnetResult = await exec(
+    `"${dotnetPath}"`,
+    dotnetFormatOptions,
+    execOptions
+  );
 
   return !!dotnetResult;
 }

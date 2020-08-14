@@ -27,6 +27,22 @@ inputs:
     required: false
     default: "true"
 
+  folder:
+    description: "The folder to operate on. Cannot be used with the `--workspace` option"
+    required: false
+
+  workspace:
+    description: "The solution or project file to operate on"
+    required: false
+
+  include:
+    description: "Option to only include given files/folders"
+    required: false
+
+  exclude:
+    description: "Option to ignore given files/folders"
+    required: false
+
 outputs:
   has-changes:
     description: "A value indicating if any files were formatted"
